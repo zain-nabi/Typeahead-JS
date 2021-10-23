@@ -1,0 +1,165 @@
+﻿@model Bloodhound_Typeahead_JS.ViewModel.PostalCodesViewModel
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main class="main" role="main">
+    <div class="container container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-12 mb-5">
+                    <input asp-for="Name" class="form-control" type="text" id="txtFromSuburb" placeholder="SUBURB FROM" aria-label="SUBURB FROM" required>
+                </div>
+                <div class="col-md-12">
+                    <input asp-for="Name" class="form-control" type="text" id="txtToSuburb" placeholder="SUBURB TO" aria-label="SUBURB TO" required>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <h3>Search for places using names:</h3>
+        <br />
+        <br />
+        <br />
+        <ol>
+            <li>Orania</li>
+            <li>Hermanus</li>
+            <li>Mpumalanga</li>
+        </ol>
+    </div>
+</main>
+
+@section scripts{
+    <script src="~/js/bloodhound.min.js"></script>
+    <script src="~/js/handlebars.min-v4.7.7.js"></script>
+    <script src="~/js/typeahead.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#txtFromSuburb'),
+                sname = new Bloodhound({
+                    datumTokenizer: function (datum) {
+                        return Bloodhound.tokenizers.whitespace(datum.title);
+                    },
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                    remote: {
+                        url: "/PostalCodes/GetPostalCodes?name=%QUERY",
+                        replace: function (url) {
+                            var ponumber = null;
+                            $(":focus").each(function () {
+                                ponumber = "#" + this.id;
+                            });
+                            return url.replace('%QUERY', $(ponumber).val());
+                        },
+                        filter: function (sname) {
+                            return sname;
+                        }
+                    }
+                });
+
+            $('#txtToSuburb'),
+                sname2 = new Bloodhound({
+                    datumTokenizer: function (datum) {
+                        return Bloodhound.tokenizers.whitespace(datum.title);
+                    },
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+                    remote: {
+                        url: "/PostalCodes/GetPostalCodes?name=%QUERY",
+                        replace: function (url) {
+                            var ponumber = null;
+                            $(":focus").each(function () {
+                                ponumber = "#" + this.id;
+                            });
+                            return url.replace('%QUERY', $(ponumber).val());
+                        },
+                        filter: function (sname2) {
+                            return sname2;
+                        }
+                    }
+                });
+
+            sname.initialize();
+            sname2.initialize();
+
+            var txtSenderSiteTypeahead = {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                limit: 10,
+                display: Handlebars.compile('{{name}}'),
+                source: sname.ttAdapter(),
+                cache: false,
+                classNames: {
+                    open: 'is-open',
+                    empty: 'is-empty',
+                    cursor: 'is-active',
+                    suggestion: 'Typeahead-suggestion',
+                    selectable: 'Typeahead-selectable'
+                },
+                templates: {
+                    empty: [
+                        '<div class="empty-message" id="mnuDisplay">',
+                        'Unable to find any sites that match the current query',
+                        '</div>'
+                    ].join('\n'),
+                    //<p style='padding:6px'><img width=50 src='{{poster_path}}'> <b>{{value}}</b> - Release date {{release_date}} </p>
+                    suggestion: Handlebars.compile('<div><label>{{name}}</label> - <label class="pull-right">{{suburb}} | {{postalCode}}</label></div>'),
+                    footer: Handlebars.compile("<b> Searched for '{{query}}'</b>")
+
+                }
+            };
+
+            var txtReceiverSiteSettings4 = {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                limit: 10,
+                display: Handlebars.compile('{{name}}'),
+                source: sname2.ttAdapter(),
+                cache: false,
+                classNames: {
+                    open: 'is-open',
+                    empty: 'is-empty',
+                    cursor: 'is-active',
+                    suggestion: 'Typeahead-suggestion',
+                    selectable: 'Typeahead-selectable'
+                },
+                templates: {
+                    empty: [
+                        '<div class="empty-message">',
+                        'Unable to find any sites that match the current query',
+                        '</div>'
+                    ].join('\n'),
+                    //<p style='padding:6px'><img width=50 src='{{poster_path}}'> <b>{{value}}</b> - Release date {{release_date}} </p>
+                    suggestion: Handlebars.compile('<div><label>{{name}}</label> - <label class="pull-right">{{suburb}} | {{postalCode}}</label></div>'),
+                    footer: Handlebars.compile("<b> Searched for '{{query}}'</b>")
+
+                }
+            };
+
+            // Instantiate the Typeahead UI
+            $('#txtFromSuburb').typeahead('destroy');
+            $('#txtToSuburb').typeahead('destroy');
+
+            $('#txtFromSuburb').typeahead(null, txtSenderSiteTypeahead).on("typeahead:selected",
+                function (obj, selectedItem) {
+                    $("#txtFromSuburb").val(selectedItem.name);
+                });
+
+
+            $('#txtToSuburb').typeahead(null, txtReceiverSiteSettings4).on("typeahead:selected",
+                function (obj, selectedItem) {
+                    $("#txtToSuburb").val(selectedItem.name);
+                });
+        });
+    </script>
+    <style>
+        .twitter-typeahead {
+            width: 100%;
+        }
+
+        .tt-input {
+            width: 100%;
+        }
+    </style>
+}
